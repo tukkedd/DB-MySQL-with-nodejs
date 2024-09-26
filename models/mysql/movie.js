@@ -51,15 +51,40 @@ export class MovieModel {
         FROM movie WHERE id = UUID_TO_BIN(?);`, [id]
     )
 
-    if(movies.length === 0) return null
+    if (movies.length === 0) return null
 
     return movies[0]
   }
 
   static async create({ input }) {
     const {
-
+      genre: genreInput,
+      title,
+      year,
+      director,
+      duration,
+      poster,
+      rate
     } = input
+
+    const [uuidResult] = await connection.query('SELECT UUID() uuid;')
+    const [{uuid}] = uuidResult
+
+   try {
+    const result = await connection.query(
+      `INSERT INTO movie (id, title, year,director, duration,  poster, rate)
+        VALUES (UUID_TO_BIN("${uuid}),?, ?, ?, ?, ?, ?); `,
+      [title, year , director,duration, poster,rate]
+    )
+   } catch (e) {
+    throw new Error('Error creating movie')
+   }
+
+    const [movies] = await connection.query(
+      `SELECT title, year, director, duration, poster, rate, BIN_TO_UUID() id
+      FROM movie WHERE id = UUID_TO_BIN(?);`,
+      [uuid]
+    )
 
   }
 
