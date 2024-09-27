@@ -68,31 +68,63 @@ export class MovieModel {
     } = input
 
     const [uuidResult] = await connection.query('SELECT UUID() uuid;')
-    const [{uuid}] = uuidResult
+    const [{ uuid }] = uuidResult
 
-   try {
-    const result = await connection.query(
-      `INSERT INTO movie (id, title, year,director, duration,  poster, rate)
-        VALUES (UUID_TO_BIN("${uuid}),?, ?, ?, ?, ?, ?); `,
-      [title, year , director,duration, poster,rate]
-    )
-   } catch (e) {
-    throw new Error('Error creating movie')
-   }
+    try {
+      await connection.query(
+        `INSERT INTO movie (id, title, year, director, duration, poster, rate)
+          VALUES (UUID_TO_BIN("${uuid}"), ?, ?, ?, ?, ?, ?);`,
+        [title, year, director, duration, poster, rate]
+      )
+    } catch (e) {
+      // puede enviarle información sensible
+      throw new Error('Error creating movie')
+      // enviar la traza a un servicio interno
+      // sendLog(e)
+    }
 
     const [movies] = await connection.query(
-      `SELECT title, year, director, duration, poster, rate, BIN_TO_UUID() id
-      FROM movie WHERE id = UUID_TO_BIN(?);`,
+      `SELECT title, year, director, duration, poster, rate, BIN_TO_UUID(id) id
+        FROM movie WHERE id = UUID_TO_BIN(?);`,
       [uuid]
     )
+
+    return movies[0]
 
   }
 
   static async delete({ id }) {
+    try {
+  
+      const [result] = await connection.query('DELETE FROM movie WHERE id = UUID_TO_BIN(?)', [id]);
 
+      if (result.affectedRows === 0) {
+        throw new Error('Película no encontrada');
+      }
+
+      return 'Película eliminada correctamente';
+    } catch (error) {
+      console.error('Error al eliminar la película:', error);
+      throw error; 
+    }
   }
 
   static async update({ id, input }) {
+    try {
+      // Actualizar película
+      const [result] = await connection.query(
+        `UPDATE movie SET ? WHERE id = UUID_TO_BIN(?)`,
+        [input, id]
+      );
 
+      if (result.affectedRows === 0) {
+        throw new Error('Película no encontrada');
+      }
+
+      return `pelicula actualizada corrrectamente` 
+    } catch (error) {
+      console.error('Error al actualizar:', error);
+      throw error;
+    }
   }
 }
