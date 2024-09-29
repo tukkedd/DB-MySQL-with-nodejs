@@ -6,7 +6,7 @@ const config = {
   host: 'localhost',
   user: 'root',
   port: 3306,
-  password: '2501',
+  password: '',
   database: 'moviesdb'
 }
 

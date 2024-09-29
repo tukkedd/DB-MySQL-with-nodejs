@@ -4,17 +4,20 @@ import { corsMiddleware } from './middlewares/cors.js'
 
 import { MovieModel } from "./models/mysql/movie.js";
 
+export const createApp = ({ movieModel }) => {
+  const app = express()
+  app.use(json())
+  app.use(corsMiddleware())
+  app.disable('x-powered-by')
 
-const app = express()
-app.use(json())
-app.use(corsMiddleware())
-app.disable('x-powered-by')
+  app.use('/movies', createMovieRouter({ movieModel: MovieModel }))
 
-app.use('/movies', createMovieRouter({ movieModel: MovieModel }))
+  const PORT = process.env.PORT ?? 1234
 
-const PORT = process.env.PORT ?? 1234
+  app.listen(PORT, () => {
+    console.log(`server listening on port http://localhost:${PORT}`);
 
-app.listen(PORT, () => {
-  console.log(`server listening on port http://localhost:${PORT}`);
+  })
+}
 
-}) 
+
